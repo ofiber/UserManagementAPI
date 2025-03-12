@@ -25,6 +25,19 @@ app.Use(async (context, next) =>
     }
 });
 
+// Middleware to validate tokens
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Headers.TryGetValue("Authorization", out var token) || !ValidateTokenAttribute.ValidateToken(token))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsync("Unauthorized");
+        return;
+    }
+
+    await next();
+});
+
 // Middleware to log HTTP method, request path, and response status code
 app.Use(async (context, next) =>
 {
@@ -39,19 +52,6 @@ app.Use(async (context, next) =>
     // Log response details
     var statusCode = context.Response.StatusCode;
     Console.WriteLine($"Response: {statusCode}");
-});
-
-// Middleware to validate tokens
-app.Use(async (context, next) =>
-{
-    if (!context.Request.Headers.TryGetValue("Authorization", out var token) || !ValidateTokenAttribute.ValidateToken(token))
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsync("Unauthorized");
-        return;
-    }
-
-    await next();
 });
 
 // Configure the HTTP request pipeline.
